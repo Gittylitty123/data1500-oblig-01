@@ -1,10 +1,10 @@
 # Besvarelse - Refleksjon og Analyse
 
-**Student:** [Ditt navn]
+**Student:** [Haider Hamid]
 
-**Studentnummer:** [Ditt studentnummer]
+**Studentnummer:** [341688]
 
-**Dato:** [Innleveringsdato]
+**Dato:** [01.03.2026]
 
 ---
 
@@ -13,12 +13,13 @@
 ### Oppgave 1.1: Entiteter og attributter
 
 **Identifiserte entiteter:**
-
-[Skriv ditt svar her - list opp alle entitetene du har identifisert]
-
 **Attributter for hver entitet:**
-
-[Skriv ditt svar her - list opp attributtene for hver entitet]
+''
+Kunde: KundeID(PK), Fornavn, Etternavn, Mobil (unik), Epost(unik). 
+Sykkel: SykkelID (PK), LåsID
+Stasjon: StasjonID (PK), Navn.  
+Lås: LåsID(PK), StasjonsID
+Utleie: Utleie(ID), KundeID, SykkelID, Utleveringstid, Innleveringstid, Leiebeløp.
 
 ---
 
@@ -26,15 +27,65 @@
 
 **Valgte datatyper og begrunnelser:**
 
-[Skriv ditt svar her - forklar hvilke datatyper du har valgt for hver attributt og hvorfor]
+KundeID, StasjonsID, LåsID, SykkelID, UtleieID: SERIAL. Generer en automatisk unik heltall, som er ideelt for primærnøkler. 
+Fornavn/Etternavn: VARCHAR(50), Vanlig tekstfelt som er mer lagringseffektivt enn CHAR. 50 tegn er standard begrensning for navn. 
+Mobil: VARCHAR(15), 15 tegn er maks lengde i følge internasjonal standard. 
+Epost: VARCHAR(100), i tilfelle det er lange epostadresse.  
+
+Navn (stasjon): VARCHAR(100), navn på stasjoner, gir nok plass for beskrivende navn. 
+
+Utleveringstid/Innleveringstid: TIMESTAMP, lagrer både dato og klokkeslett, som er nødvendig for å kunne beregne nøyaktig leievarighet.  
+Leiebeløp: NUMERIC(10,2), siden det er penger. 
 
 **`CHECK`-constraints:**
 
-[Skriv ditt svar her - list opp alle CHECK-constraints du har lagt til og forklar hvorfor de er nødvendige]
+Mobil: CHECK (Mobil ~ '^[0-9+ ]+$'), dette sikrer at feltet kune inneholder tall, mellomrom eller pluss tegn, og ikke noen bokstaver. 
+
+Epost: CHECK (Epost LIKE '%@%'), sikrer at eposten inneholder en @. 
+
+Leiebeløp: CHECK(Leiebeløp >= 0), sikrer at beløpet aldri blir negativt. 
 
 **ER-diagram:**
 
-[Legg inn mermaid-kode eller eventuelt en bildefil fra `mermaid.live` her]
+erDiagram
+    KUNDE ||--o{ UTLEIE: "utfører"
+    SYKKEL ||--o{ UTLEIE: "leies ut" 
+    STASJON ||--|{ LÅS: "inneholder"
+    LÅS |o--o| SYKKEL: "låser" 
+
+
+KUNDE {
+    SERIAL kunde_id PK
+    VARCHAR_50 fornavn
+    VARCHAR_50 etternavn
+    VARCHAR_15 mobil "UNIQUE"
+    VARCHAR_100 epost "UNIQUE"
+}
+
+STASJON{
+    SERIAL stasjon_id PK
+    VARCHAR_100 navn
+}
+
+LÅS{
+    SERIAL lås_id PK
+    INTEGER stasjon_id FK 
+}
+
+SYKKEL{
+    SERIAL sykkel_id PK 
+    INTEGER lås_id FK "NULL hvis utleid"
+}
+
+UTLEIE{
+    SERIAL utleie_id PK
+    INTEGER kunde_id FK 
+    INTEGER sykkel_id FK 
+    TIMESTAMP utleveringstid
+    TIMESTAMP innleveringstid "NULL"
+    NUMERIC_10_2 leiebeløp
+}
+
 
 ---
 
@@ -42,15 +93,58 @@
 
 **Valgte primærnøkler og begrunnelser:**
 
-[Skriv ditt svar her - forklar hvilke primærnøkler du har valgt for hver entitet og hvorfor]
+KundeID: Unik ID som identifiserer hver kunde, kunne ha brukt epost eller mobil men disse kan endres. 
+StasjonsID: Unik ID som identifiserer hver stasjon. 
+LåsID: Unik ID som identifiserer hver lås, slik at vi vet hvilken lås sykkelen har blitt innlevert. 
+SykkelID: Unik ID for hver sykkel, blir samme som kundeID men på sykler. 
+UtleieID: Unik ID for hver utleietransaksjon. En kunde kan leie samme sykkel flere ganger, dermed trenger vi en unik id for hver utleie. 
+
 
 **Naturlige vs. surrogatnøkler:**
 
-[Skriv ditt svar her - diskuter om du har brukt naturlige eller surrogatnøkler og hvorfor]
+Har brukt surrogatnøkler og ikke naturlige nøkler. Naturlige nøkler kan endre seg over tid, f.eks e-post. Hvis en kunde bytter e-post må alle relaterte tabeller oppdateres, som er ressurskrevende. Naturlige nøkler kan også inneholde sensitiv informasjon, som f.eks personnummer. 
+
 
 **Oppdatert ER-diagram:**
 
-[Legg inn mermaid-kode eller eventuelt en bildefil fra `mermaid.live` her]
+erDiagram
+    KUNDE ||--o{ UTLEIE: "utfører"
+    SYKKEL ||--o{ UTLEIE: "leies ut" 
+    STASJON ||--|{ LÅS: "inneholder"
+    LÅS |o--o| SYKKEL: "låser" 
+
+
+KUNDE {
+    SERIAL kunde_id PK
+    VARCHAR_50 fornavn
+    VARCHAR_50 etternavn
+    VARCHAR_15 mobil "UNIQUE"
+    VARCHAR_100 epost "UNIQUE"
+}
+
+STASJON{
+    SERIAL stasjon_id PK
+    VARCHAR_100 navn
+}
+
+LÅS{
+    SERIAL lås_id PK
+    INTEGER stasjon_id FK 
+}
+
+SYKKEL{
+    SERIAL sykkel_id PK 
+    INTEGER lås_id FK "NULL hvis utleid"
+}
+
+UTLEIE{
+    SERIAL utleie_id PK
+    INTEGER kunde_id FK 
+    INTEGER sykkel_id FK 
+    TIMESTAMP utleveringstid
+    TIMESTAMP innleveringstid "NULL"
+    NUMERIC_10_2 leiebeløp
+}
 
 ---
 
@@ -58,15 +152,65 @@
 
 **Identifiserte forhold og kardinalitet:**
 
-[Skriv ditt svar her - list opp alle forholdene mellom entitetene og angi kardinalitet]
+
+KUNDE ||--o{ UTLEIE: En kunde kan ha 0 eller flere utleier, men en utleie kan bare ha en kunde. 
+
+SYKKEL ||--o{ UTLEIE: En sykkel kan ha null eller flere utleier gjennom tiden sin, men hver utleie kan bare ha nøyaktig en sykkel. 
+
+STASJON ||--|{ LÅS: En stasjon har en eller flere låser, men en lås tilhører nøyaktig en stasjon. 
+
+LÅS |o--o| SYKKEL: En lås kan inneholde null eller en sykkel, og en sykkel kan være parkert i null eller en lås. 
 
 **Fremmednøkler:**
 
-[Skriv ditt svar her - list opp alle fremmednøklene og forklar hvordan de implementerer forholdene]
+stasjons_id i tabellen LÅS: kobler hver lås til en spesifikk stasjon. Vi hadde ikke visst hvor låsen er uten denne. 
+
+lås_id i tabellen SYKKEL: Denne tillater NULL. Viser at hvis den har en verdi så er sykkelen i den låsen, hvis den er NULL så er sykkelen utleid. 
+
+kunde_id i tabellen UTLEIE: Kobler utleie til kunden. 
+
+sykkel_id i tabellen UTLEIE: Kobler utleie til sykkelen som skal brukes. 
 
 **Oppdatert ER-diagram:**
 
-[Legg inn mermaid-kode eller eventuelt en bildefil fra `mermaid.live` her]
+erDiagram
+    KUNDE ||--o{ UTLEIE: "utfører"
+    SYKKEL ||--o{ UTLEIE: "leies ut" 
+    STASJON ||--|{ LÅS: "inneholder"
+    LÅS |o--o| SYKKEL: "låser" 
+
+
+KUNDE {
+    SERIAL kunde_id PK
+    VARCHAR_50 fornavn
+    VARCHAR_50 etternavn
+    VARCHAR_15 mobil "UNIQUE"
+    VARCHAR_100 epost "UNIQUE"
+}
+
+STASJON{
+    SERIAL stasjon_id PK
+    VARCHAR_100 navn
+}
+
+LÅS{
+    SERIAL lås_id PK
+    INTEGER stasjon_id FK 
+}
+
+SYKKEL{
+    SERIAL sykkel_id PK 
+    INTEGER lås_id FK "NULL hvis utleid"
+}
+
+UTLEIE{
+    SERIAL utleie_id PK
+    INTEGER kunde_id FK 
+    INTEGER sykkel_id FK 
+    TIMESTAMP utleveringstid
+    TIMESTAMP innleveringstid "NULL"
+    NUMERIC_10_2 leiebeløp
+}
 
 ---
 
@@ -74,15 +218,16 @@
 
 **Vurdering av 1. normalform (1NF):**
 
-[Skriv ditt svar her - forklar om datamodellen din tilfredsstiller 1NF og hvorfor]
+
+Modellen min tilfredsstiller 1NF fordi alle tabeller har en unik primærnøkkel. Alle attributter inneholder også atomære verdier, der f.eks er navn delt opp i fornavn og etternavn.Det finnes ingen kolonner som inneholder lister eller repeterende grupper. 
 
 **Vurdering av 2. normalform (2NF):**
 
-[Skriv ditt svar her - forklar om datamodellen din tilfredsstiller 2NF og hvorfor]
+Modellen min tilfredsstiller 2NF fordi alle tabeller bruker en enkel ID som KundeID, der alle andre opplysninger i tabellen hører direkte til denne IDen. 
 
 **Vurdering av 3. normalform (3NF):**
 
-[Skriv ditt svar her - forklar om datamodellen din tilfredsstiller 3NF og hvorfor]
+Modellen min tilfredsstiller også 3NF fordi jeg har ikke informasjon som er avhengig av andre felt enn selve primærnøkkelen.  F.eks har ikke lagret stasjonsnavn inne i lås-tabellen, jeg har bare lagt inn en id som peker til stasjonen. 
 
 **Eventuelle justeringer:**
 
@@ -96,15 +241,15 @@
 
 **Plassering av SQL-skript:**
 
-[Bekreft at du har lagt SQL-skriptet i `init-scripts/01-init-database.sql`]
+Bekrefter at SQL skriptet ligger i filmappen.
 
 **Antall testdata:**
 
-- Kunder: [antall]
-- Sykler: [antall]
-- Sykkelstasjoner: [antall]
-- Låser: [antall]
-- Utleier: [antall]
+- Kunder: 5
+- Sykler: 100
+- Sykkelstasjoner: 5
+- Låser: 100
+- Utleier: 50
 
 ---
 
@@ -112,7 +257,13 @@
 
 **Dokumentasjon av vellykket kjøring:**
 
-[Skriv ditt svar her - f.eks. skjermbilder eller output fra terminalen som viser at databasen ble opprettet uten feil]
+haiderhamid@MacBook-Air data1500-oblig-01 % docker-compose up -d 
+[+] up 17/17
+ ✔ Image postgres:15-alpine                       Pulled                   10.3s
+ ✔ Network data1500-oblig-01_data1500-network     Created                  0.0s
+ ✔ Volume data1500-oblig-01_postgres_data_oblig_1 Created                  0.0s
+ ✔ Container data1500-postgres                    Created                  0.1s
+
 
 **Spørring mot systemkatalogen:**
 
@@ -127,7 +278,21 @@ ORDER BY table_name;
 **Resultat:**
 
 ```
-[Skriv resultatet av spørringen her - list opp alle tabellene som ble opprettet]
+oblig01=# SELECT table_name 
+oblig01-# FROM information_schema.tables 
+oblig01-# WHERE table_schema = 'public' 
+oblig01-#   AND table_type = 'BASE TABLE'
+oblig01-# ORDER BY table_name;
+ table_name 
+------------
+ kunde
+ laas
+ stasjon
+ sykkel
+ utleie
+(5 rows)
+
+oblig01=# 
 ```
 
 ---
@@ -139,19 +304,22 @@ ORDER BY table_name;
 **SQL for å opprette rolle:**
 
 ```sql
-[Skriv din SQL-kode for å opprette rollen 'kunde' her]
+CREATE ROLE kunde; 
 ```
 
 **SQL for å opprette bruker:**
 
 ```sql
-[Skriv din SQL-kode for å opprette brukeren 'kunde_1' her]
+CREATE USER kunde_1 WITH PASSWORD 'kundepassord'; 
+GRANT kunde TO kunde_1; 
 ```
 
 **SQL for å tildele rettigheter:**
 
 ```sql
-[Skriv din SQL-kode for å tildele rettigheter til rollen her]
+GRANT CONNECT ON DATABASE oblig01 TO kunde; 
+GRANT USAGE ON SCHEMA public to kunde; 
+GRANT SELECT ON TABLE Stasjon, Laas, Sykkel, Kunde, Utleie TO kunde; 
 ```
 
 ---
@@ -161,12 +329,19 @@ ORDER BY table_name;
 **SQL for VIEW:**
 
 ```sql
-[Skriv din SQL-kode for VIEW her]
+CREATE VIEW mine_utleier AS 
+SELECT Utleie.*
+FROM Utleie
+JOIN Kunde ON Utleie.kunde_id = Kunde.kunde_id
+WHERE Kunde.fornavn = SESSION_USER; 
+
+GRANT SELECT ON mine_utleier TO kunde; 
+
 ```
 
 **Ulempe med VIEW vs. POLICIES:**
 
-[Skriv ditt svar her - diskuter minst én ulempe med å bruke VIEW for autorisasjon sammenlignet med POLICIES]
+Ved bruk av VIEW kan brukere omgå sikkerhet hvis de får tilgang til den originale tabellen, de kan f.eks skrive SELECT * FROM Utleie og deretter se alle data. Men med POLICY så er sikkerheten bygget inn i selve tabellen slik at brukere ser kunde sine egne rader uansett hvilken spørring de kjører. POLICY er mer robust og lettere å administrere. 
 
 ---
 
@@ -182,15 +357,61 @@ ORDER BY table_name;
 
 **Totalt antall utleier per år:**
 
-[Skriv din utregning her]
+Totalt antall utleier per år: 
+Høysesong = 5 måneder x 20 000 = 100 000 utleier
+Mellomsesong = 4 måneder x 5000 = 20 000 utleier
+Lavsesong = 3 måneder x 500 = 1500 utleier
+Totalt = 121 500 utleier i året. 
 
 **Estimat for lagringskapasitet:**
 
-[Skriv din utregning her - vis hvordan du har beregnet lagringskapasiteten for hver tabell]
+Kundetabell: 
+Antar 1000 kunder ca: 
+kunde_id: 4 bytes
+fornavn: ca 10 bytes
+etternavn: ca 10 bytes
+mobil: ca 10 bytes
+epost: ca 20 bytes
+per rad: 4 + 10 + 10 + 10 + 20 = 54 bytes
+Totalt: 1000 x 54 bytes = 54 KB
+
+Stasjontabell: 
+5 stasjoner
+stasjon_id: 4 bytes
+navn: 20 bytes
+per rad: 4 + 20 = 24 
+totalt: 5 x 24 = 0.12 KB 
+
+Laastabell:
+100 låser 
+laas_id: 4 bytes
+stasjon_id: 4 bytes
+Per rad: 8 bytes
+totalt = 100 x 8 = 0,8 KB
+
+Sykkeltabell: 
+100 sykler
+sykkel_id: 4 bytes
+laas_id: 4 bytes
+Per rad: 8 bytes
+Totalt: 8 x 100 = 0.8 KB 
+
+Utleietabell: 
+121 500 utleier
+utleie_id: 4 bytes
+kunde_id: 4 bytes
+sykkel_id: 4 bytes
+utleveringstid: 8 bytes
+innleveringstid: 8 bytes
+leiebeloep: 8 bytes
+per rad: 4+4+4+8+8+8= 36 bytes
+Totalt: 121 500 x 36 = 4 374 000 bytes = 4.4 MB
+
+
 
 **Totalt for første år:**
 
-[Skriv ditt estimat her]
+Totalt i KB = 54+0.12+0.8+0.8+4374= 4429 KB = 4.43MB.
 
 ---
 
@@ -200,31 +421,35 @@ ORDER BY table_name;
 
 **Problem 1: Redundans**
 
-[Skriv ditt svar her - gi konkrete eksempler fra CSV-filen som viser redundans]
-
+CSV filen inneholder mye duplisering av data. F.eks så gjentas kundeinformasjon flere ganger, i dette tilfellet så gjentas Ole Hansen med hans info 3 ganger. Stasjonsinformasjon gjentas flere ganger også, f.eks Sentrum stasjon gjentas flere ganger. Dette gjør at filen blir unødvendig større.
 **Problem 2: Inkonsistens**
 
-[Skriv ditt svar her - forklar hvordan redundans kan føre til inkonsistens med eksempler]
+Med redundans så skaper det at data kan bli modstridende. F.eks hvis Ole Hansen bytter telefonnummeret sitt så må dette oppdateres på alle radene med telefonnummeret hans. Hvis vi glemmer å oppdatere en av radene så vil systemet tro at det finnes to forskjellige personer. 
 
 **Problem 3: Oppdateringsanomalier**
 
-[Skriv ditt svar her - diskuter slette-, innsettings- og oppdateringsanomalier]
+Sletteanomali: Hvis vi f.eks sletter alle utleier av en kunde, så mister vi alt av informasjon om dem som kunde. Vi kan ikke beholde data om kunder uten at de har minst en utleie registrert. 
+
+Innsettingsanomali: En ny sykkel kan ikke legges til før noen har leid den.
+
+Oppdateringsanomali: Hvis en adresse til en stasjon endres, må den finnes og endres i alle radene der stasjonen er nevnt. Glemmer vi en rad, så får vi forskjellige adresser på samme stasjon i systemet. 
 
 **Fordeler med en indeks:**
 
-[Skriv ditt svar her - forklar hvorfor en indeks ville gjort spørringen mer effektiv]
+Fordelen med indeks er at den kan slå opp direkte hvor radene ligger, uten den så måtte databasen lese alle 121 500 radene for å finne en utleier av en sykkel. Blir tusenvis av ganger raskere med indeks. 
 
 **Case 1: Indeks passer i RAM**
-
-[Skriv ditt svar her - forklar hvordan indeksen fungerer når den passer i minnet]
+Hvis indeksen passer i RAM vil oppslag skje umiddelbart. Her vil databasen laste indeksen inn i minnet når den starter og vil ikke være behov for å hente data fra harddisken. Brukes vanligvis et B+ tre. 
 
 **Case 2: Indeks passer ikke i RAM**
 
-[Skriv ditt svar her - forklar hvordan flettesortering kan brukes]
+Hvis den ikke passer i RAM så vil databasen bruek ekstern flettesortering der data deles i mindre biter og sorteres i RAM og skrives til disk og deretter flettes sammen. 
 
 **Datastrukturer i DBMS:**
 
-[Skriv ditt svar her - diskuter B+-tre og hash-indekser]
+B+ tre: Er standard for de fleste databaser, der denne datastrukteren gjør det lett å finne ekstakte verdier og verdier som er i en spesifikk periode. 
+
+Hash-indeks: Er veldig rask for eksakte søk, men fungerer ikke for verdier i en periode eller sortering. I dette tilfelle er B+ tre bedre for systemet vårt. 
 
 ---
 
@@ -232,17 +457,19 @@ ORDER BY table_name;
 
 **Foreslått datastruktur:**
 
-[Skriv ditt svar her - f.eks. heap-fil, LSM-tree, eller annen egnet datastruktur]
+LSM-tree
 
 **Begrunnelse:**
 
+LSM-tre legger til nye hendelser på slutten, uten å organisere det. Disse loggene skrives direkte til en memtable i RAM, dette gjør at skrivingen er veldig rask. Lesingen er litt tregere men siden logging sjeldent leses så er dette greit. Når memtable er full så legges den i disk som en fil, og deretter starter en ny tom memtable. 
+
 **Skrive-operasjoner:**
 
-[Skriv ditt svar her - forklar hvorfor datastrukturen er egnet for mange skrive-operasjoner]
+Med et LSM tre vil vi hele tiden skrive ny hendelser, f.eks nr det skjer innlogginger, utleier osv. Skrivingen skjer ved at alt blir lagt til i slutten i memtable uten noe sortering. Skrivingen er veldig rask i dette tilfellet. Datastrukturen håndterer konstant skriving veldig effektivt. 
 
 **Lese-operasjoner:**
 
-[Skriv ditt svar her - forklar hvordan datastrukturen håndterer sjeldne lese-operasjoner]
+Lesingen er tregere med LSM tre, men dette er greit siden logger leses sjeldent. Lesingen skjer vanligvis hvis det skal feilsøkes eller at admin vil se aktivitetshistorikken. Lesingen er tregere hvis vi skal finne et spesifikk hendelse , der det må søkes gjennom memtable og flere filer på disken. Men hvis vi ønsker bare å se de siste 50 hendelsene så er dette veldig raskt siden nyeste data ligger i memtable. 
 
 ---
 
@@ -250,45 +477,53 @@ ORDER BY table_name;
 
 **Hvor bør validering gjøres:**
 
-[Skriv ditt svar her - argumenter for validering i ett eller flere lag]
+Validering bør gjøres i tre lag, i frontend, applikasjonslag og database. 
 
 **Validering i nettleseren:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+Fordeler: Rask tilbakemelding til brukeren uten å vente på server, som reduserer nettverkstrafikken. 
 
+Ulemper: Hvis en bruker ønsker å gjøre skade så kan de slå av JavaScript eller bruke verktøy som Postman. Validering i nettleseren kan ikke stoles på alene. 
 **Validering i applikasjonslaget:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+Fordeler: Her valideres all input før den når databasen. Dette er det viktigste sikkerhetslaget. Her kan det utføres avanserte kontroller som f.eks sjekke om et mobilnummer er allerede registrert. Dette laget kan også beskytte mot SQL injection ved å håndtere inndata på en trygg måte. 
+
+Ulemper: Data må sendes til serveren og tilbake før man får feilmelding, som kan ta lengre tid enn hvis det ble gjort i nettleseren. 
 
 **Validering i databasen:**
 
-[Skriv ditt svar her - diskuter fordeler og ulemper]
+Fordeler: CHECK constraints som f.eks for mobilnummer sikrer at ugyldig data aldri kommer inn, samme om applikasjonslaget har en feil. FOREIGN KEY relasjoner sikrer også at dataen holder seg konsistente. 
 
+Ulemper: Feilmeldingene er ikke brukervennlige. Databasen kan bare gjøre enkle valideringer som format og datatype. 
 **Konklusjon:**
 
-[Skriv ditt svar her - oppsummer hvor validering bør gjøres og hvorfor]
+Alle tre lag bør brukes. Hvis en av de feiler som vil den andre fange opp feilen. 
 
 ---
 
 ### Oppgave 4.5: Refleksjon over læringsutbytte
 
 **Hva har du lært så langt i emnet:**
+ 
+Designe databaser, og lage ER diagrammer. 
+Hvordan primærnøkler og fremmednøkler kobler tabeller sammen. 
+SQL for å lage tabeller, sette in data og sette opp sikkerhet. 
+Hvordan å bruke DOCKER for å sette opp en database. 
 
-[Skriv din refleksjon her - diskuter sentrale konsepter du har lært]
 
 **Hvordan har denne oppgaven bidratt til å oppnå læringsmålene:**
 
-[Skriv din refleksjon her - koble oppgaven til læringsmålene i emnet]
+Gitt meg praktisk erfaring å faktisk designe og lage en database, skrive SQL kode som bygger databasen, tegne ER diagrammer. Teorispørsmålene har også hjulpet meg å forstå hvordan databaser faktisk fungerer. 
 
 Se oversikt over læringsmålene i en PDF-fil i Canvas https://oslomet.instructure.com/courses/33293/files/folder/Plan%20v%C3%A5ren%202026?preview=4370886
 
 **Hva var mest utfordrende:**
 
-[Skriv din refleksjon her - diskuter hvilke deler av oppgaven som var mest krevende]
+Det mest utfordrende var bygging av databasen, finne ut forholdene mellom de ulike dataene. Hvordan å sette opp docker og hvordan det brukes. 
 
 **Hva har du lært om databasedesign:**
 
-[Skriv din refleksjon her - reflekter over prosessen med å designe en database fra bunnen av]
+Å tenke hvordan dataene skal brukes i praksis. Unngå unødvendig gjentakelse av data. Tenke på hva som kobles sammen og ligge i de forskjellige tabellene. Forstår også at god planlegging på starten vil gjøre kodeskrivingen og vedlikeholdingen av databasen lettere. 
 
 ---
 
